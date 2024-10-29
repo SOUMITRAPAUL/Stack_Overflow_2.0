@@ -1,15 +1,17 @@
-import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import { useEffect, useState } from 'react';
 
 function PostList({ token }) {
   const [posts, setPosts] = useState([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [file, setFile] = useState(null);
-  const [showingUserPosts, setShowingUserPosts] = useState(false); // State to toggle view
+  const [fileType, setFileType] = useState('');
+  const [showingUserPosts, setShowingUserPosts] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
-    fetchPosts(); // Initially fetch posts by others
+    fetchPosts();
   }, [token]);
 
   const fetchPosts = async () => {
@@ -18,7 +20,7 @@ function PostList({ token }) {
     });
     const data = await res.json();
     setPosts(data);
-    setShowingUserPosts(false); // Set to false when fetching posts by others
+    setShowingUserPosts(false);
   };
 
   const fetchUserPosts = async () => {
@@ -27,7 +29,7 @@ function PostList({ token }) {
     });
     const data = await res.json();
     setPosts(data);
-    setShowingUserPosts(true); // Set to true when fetching user posts
+    setShowingUserPosts(true);
   };
 
   const handleCreatePost = async () => {
@@ -36,6 +38,7 @@ function PostList({ token }) {
     formData.append('content', content);
     if (file) {
       formData.append('codeSnippet', file);
+      formData.append('fileType', fileType);
     }
 
     const res = await fetch(`http://localhost:8000/post`, {
@@ -50,24 +53,31 @@ function PostList({ token }) {
       setTitle('');
       setContent('');
       setFile(null);
+      setFileType('');
       alert("Post created successfully");
-      fetchPosts(); // Refresh posts after creating a new post
+      fetchPosts();
     } else {
       alert('Error creating post');
     }
   };
 
+  const handleFileTypeSelection = (type) => {
+    setFileType(type);
+    setIsDropdownOpen(false);
+  };
+
   return (
-    <div>
-      <div className='flex justify-between m-4'>
-        <h2 className="text-xl font-bold mb-4">Create a Post</h2>
+    <div className="bg-gray-50 p-4 rounded-lg shadow-lg">
+      <div className='flex justify-between mb-6'>
+        <h2 className="text-xl font-bold">Create a Post</h2>
         <button
-          onClick={showingUserPosts ? fetchPosts : fetchUserPosts} // Toggle between fetching user posts and others' posts
-          className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded mb-4"
+          onClick={showingUserPosts ? fetchPosts : fetchUserPosts}
+          className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
         >
-          {showingUserPosts ? "View Posts by Others" : "View My Posts"} {/* Dynamic button label */}
+          {showingUserPosts ? "View Posts by Others" : "View My Posts"}
         </button>
       </div>
+      
       <input
         type="text"
         value={title}
@@ -81,14 +91,42 @@ function PostList({ token }) {
         placeholder="Content"
         className="block w-full p-2 mb-2 border rounded"
       />
-      <input
-        type="file"
-        onChange={e => setFile(e.target.files[0])}
-        className="block w-full p-2 mb-2"
-      />
+
+      {/* Custom file input with dropdown */}
+      <div className="relative inline-block w-full mb-4">
+        <button
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="bg-gray-300 p-2 rounded w-full text-left"
+        >
+          {fileType ? `File Type: ${fileType}` : "Choose File Type and Upload"}
+        </button>
+        
+        {isDropdownOpen && (
+          <div className="absolute bg-white border rounded shadow mt-1 w-full z-10">
+            {[".c", ".cpp", ".java", ".py"].map(type => (
+              <div
+                key={type}
+                onClick={() => handleFileTypeSelection(type)}
+                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+              >
+                {type.toUpperCase()} ({type})
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {fileType && (
+        <input
+          type="file"
+          onChange={e => setFile(e.target.files[0])}
+          className="block w-full p-2 mt-2 mb-4 border rounded"
+        />
+      )}
+
       <button
         onClick={handleCreatePost}
-        className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded mb-4"
+        className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded mb-6"
       >
         Create Post
       </button>
@@ -96,13 +134,13 @@ function PostList({ token }) {
       <h2 className="text-xl font-bold mb-4">{showingUserPosts ? "My Posts" : "Posts by Others"}</h2>
       {posts.length ? (
         posts.map(post => (
-          <div key={post._id} className="p-4 mb-4 bg-white rounded shadow">
-            <h3 className="text-lg font-bold">{post.title}</h3>
-            <p>{post.content}</p>
+          <div key={post._id} className="p-4 mb-4 bg-gray-100 border rounded-lg shadow-md">
+            <h3 className="text-lg font-bold mb-2">{post.title}</h3>
+            <p className="mb-2">{post.content}</p>
             {post.codeSnippetUrl && (
               <a
                 href={post.codeSnippetUrl}
-                className="text-blue-500"
+                className="text-blue-500 hover:text-blue-600 underline"
                 target="_blank"
                 rel="noopener noreferrer"
               >

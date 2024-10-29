@@ -1,8 +1,12 @@
 const Notification = require('../models/Notification');
 
+// Clean up notifications older than 24 hours
 const cleanOldNotifications = async () => {
-  const oldDate = new Date(Date.now() -  3 * 60 * 1000);
+  const oldDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // 1 day in milliseconds
   await Notification.deleteMany({ createdAt: { $lt: oldDate } });
 };
 
-setInterval(cleanOldNotifications,  2* 60 * 1000); // Run 2min delay
+// Run cleanup every 2 hours
+setInterval(cleanOldNotifications, 2 * 60 * 60 * 1000);
+
+module.exports = cleanOldNotifications;

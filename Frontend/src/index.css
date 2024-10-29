@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom styles can be added below for additional theming */
+body {
+  font-family: 'Inter', sans-serif; /* Modern font for the application */
+  background-color: rgb(115, 227, 30); /* Subtle background color */
+}
+
+h1, h2, h3 {
+  color: #371f1f; /* Dark text for headings */
+}
+
+p {
+  color: #020000; /* Medium dark text for paragraphs */
+}
+
